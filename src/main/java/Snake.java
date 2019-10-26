@@ -1,56 +1,99 @@
 
+import collision.Collider;
+import common.Point2D;
+import common.SimpleDirection;
 import javafx.scene.Group;
-import javafx.scene.paint.Color;
 
 import java.util.*;
 import java.util.stream.IntStream;
 
-public class Snake {
-    private static final Color COLOR = Color.GREEN;
-    private static final int UNIT = 20;
-    private static final int HEIGHT = UNIT;
-    private static final int WIDTH = UNIT;
-
-    private final int INITIAL_SIZE = 4;
+public class Snake implements Collider {
+    private static final int DEFAULT_MAX_SIZE = 10;
 
     private Group snakeGroup = new Group();
-    private List<SnakePart> snakeParts = new ArrayList<>();
+    private List<SnakePart> snakeParts = new LinkedList<>();
     private SimpleDirection direction = SimpleDirection.LEFT;
-    private Queue<TurnPoint> turnPointsQueue = new LinkedList<>();
+    private List<TurnPoint> turnPointsQueue = new LinkedList<>();
+    private SnakeState state = SnakeState.NORMAL;
 
-    public Snake(Point2D headPosition) {
-        IntStream.range(0, INITIAL_SIZE)
-                .forEach(i -> addPart(headPosition.add(new Point2D(WIDTH * i, 0))));
-        turnPointsQueue.add(new TurnPoint(direction, snakeParts.get(0).getPosition(), INITIAL_SIZE - 1));
+    public Snake(Point2D headPosition, int initialSize) {
+        IntStream.range(0, initialSize)
+                .forEach(i -> addPart(i, headPosition.add(new Point2D(Main.UNIT * i, 0))));
+    }
+
+    private void addPart(int index, Point2D position) {
+        SnakePart part = new SnakePart(position);
+        snakeParts.add(index, part);
+        snakeGroup.getChildren().add(part);
+        turnPointsQueue.add(index, new TurnPoint(direction, position));
+    }
+
+    private void addPart(int index, SnakePart part) {
+        snakeParts.add(index, part);
+        snakeGroup.getChildren().add(part);
+        turnPointsQueue.add(index, new TurnPoint(direction, part.getPosition()));
+    }
+
+    public void update() {
+        if(snakeParts.size() == DEFAULT_MAX_SIZE) {
+            state = SnakeState.WIN;
+        }
+        if (state.equals(SnakeState.NORMAL)) {
+            move();
+        }
+        if (state.equals(SnakeState.EATING)) {
+            grow();
+        }
+    }
+
+    private void move() {
+        IntStream.range(0, snakeParts.size())
+                .forEach(i -> snakeParts.get(i).move(turnPointsQueue.get(i).getDirection()));
+        turnPointsQueue.remove(turnPointsQueue.size() - 1);
+        turnPointsQueue.add(0, new TurnPoint(direction, snakeParts.get(0).getPosition()));
+    }
+
+    private void grow() {
+        addPart(0, new SnakePart(snakeParts.get(0).getPosition()));
+        snakeParts.get(0).move(direction);
+        state = SnakeState.NORMAL;
+    }
+
+    public void turn(boolean right) {
+        direction = right ? direction.getNext(direction) : direction.getPrevious(direction);
+    }
+
+    public void eat() {
+        state = SnakeState.EATING;
+    }
+
+    @Override
+    public boolean isCollision(Collider collider) {
+        return snakeParts.get(0).isCollision(collider);
+    }
+
+    @Override
+    public Point2D getPosition() {
+        return snakeParts.get(0).getPosition();
+    }
+
+    @Override
+    public void handleCollision(Collider collider) {
     }
 
     public Group getGroup() {
         return snakeGroup;
     }
 
-    private void addPart(Point2D position) {
-         SnakePart part = new SnakePart(position, direction);
-         snakeParts.add(part);
-         snakeGroup.getChildren().add(part);
+    public SnakePart getHead() {
+        return snakeParts.get(0);
     }
 
-    public void move() {
-        snakeParts.forEach(part ->
-        {
-            turnPointsQueue.forEach(point ->{
-                if (part.getPosition().isEqual(point.getPoint())) {
-                    if (point.use() == 0) {
-                        turnPointsQueue.remove();
-                    }
-                    part.setDirection(point.getDirection());
-                }
-            });
-            part.move();
-        });
+    public List<SnakePart> getCorp() {
+        return snakeParts.subList(1, snakeParts.size());
     }
 
-    public void turn(boolean right) {
-        direction = right ? direction.getNext(direction) : direction.getPrevious(direction);
-        turnPointsQueue.add(new TurnPoint(direction, snakeParts.get(0).getPosition(), snakeParts.size() - 1));
+    public SnakeState getState() {
+        return state;
     }
 }

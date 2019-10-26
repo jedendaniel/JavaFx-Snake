@@ -1,3 +1,5 @@
+package common;
+
 public class Point2D {
     private int x;
     private int y;
@@ -27,7 +29,7 @@ public class Point2D {
         return new Point2D(x- point2D.getX(), y - point2D.getY());
     }
 
-    public boolean isEqual(Point2D point2D) {
+    public boolean isTheSame(Point2D point2D) {
         return x == point2D.getX() && y == point2D.getY();
     }
 }

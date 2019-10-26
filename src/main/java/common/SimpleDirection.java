@@ -1,3 +1,5 @@
+package common;
+
 public enum SimpleDirection {
     UP(0, 1),
     RIGHT(-1, 0),
