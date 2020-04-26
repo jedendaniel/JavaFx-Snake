@@ -1,16 +1,18 @@
-import common.Point2D;
-import common.SimpleDirection;
+package dd.snake;
+
+import dd.common.Direction;
+import javafx.geometry.Point2D;
 
 public class TurnPoint {
-    private SimpleDirection direction;
+    private Direction direction;
     private Point2D point;
 
-    public TurnPoint(SimpleDirection direction, Point2D point) {
+    TurnPoint(Direction direction, Point2D point) {
         this.direction = direction;
         this.point = point;
     }
 
-    public SimpleDirection getDirection() {
+    Direction getDirection() {
         return direction;
     }
 

@@ -1,5 +1,7 @@
+package dd.snake;
+
 public enum SnakeState {
-    NORMAL,
+    MOVING,
     EATING,
     WIN,
     LOST
