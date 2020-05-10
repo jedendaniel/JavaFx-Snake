@@ -1,11 +1,11 @@
 package dd;
 
-import dd.collision.Collider;
 import dd.collision.CollisionHandler;
 import dd.config.WindowProperties;
 import dd.food.Food;
 import dd.food.FoodSpawner;
 import dd.snake.Snake;
+import dd.snake.SnakeState;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
@@ -14,11 +14,9 @@ import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static dd.config.GameLoopProperties.FRAME_RATE;
-import static dd.snake.SnakeState.LOST;
 
 
 public class Main extends Application {
@@ -28,12 +26,18 @@ public class Main extends Application {
     private Group rootGroup = new Group();
     private Snake snake = new Snake(new Point2D(4, 4), 4);
     private Food food = new Food();
-    private FoodSpawner foodSpawner = new FoodSpawner(food, List.of(snake));
+    private FoodSpawner foodSpawner = new FoodSpawner(food, collisionHandler.getAllColliders());
     private List<GameObject> gameObjects = List.of(snake, foodSpawner);
     private List<GraphicObject> graphicObjects = List.of(snake, food);
+    private GameState gameState = GameState.ONGOING;
 
     private InputHandler inputHandler = new InputHandler(snake);
 
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
     public void start(Stage stage) {
         initScene(stage);
 
@@ -42,7 +46,7 @@ public class Main extends Application {
             long lastTime = startTime;
 
             public void handle(long currentNanoTime) {
-                if (currentNanoTime - lastTime > FRAME_RATE) {
+                if (currentNanoTime - lastTime > FRAME_RATE && gameState == GameState.ONGOING) {
                     update();
                     lastTime = currentNanoTime;
                 }
@@ -56,7 +60,7 @@ public class Main extends Application {
         graphicObjects.forEach(GraphicObject::draw);
         collisionHandler.handleCollisions();
         if (isGameEnded()) {
-            endGame();
+            handleGameEnd();
         }
     }
 
@@ -70,17 +74,24 @@ public class Main extends Application {
     }
 
     private boolean isGameEnded() {
-        return snake.getState() == LOST;
+        return snake.getSnakeState() == SnakeState.WIN || snake.getSnakeState() == SnakeState.LOST;
     }
 
-    private void endGame() {
+    private void handleGameEnd() {
+        if (snake.getSnakeState() == SnakeState.WIN) {
+            handleGameWin();
+        } else {
+            handleGameLost();
+        }
+    }
+
+    private void handleGameWin() {
+        gameState = GameState.ENDED;
+        System.out.println("The end, you win");
+    }
+
+    private void handleGameLost() {
+        gameState = GameState.ENDED;
         System.out.println("The end, you lost");
-    }
-
-    public void stop() {
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

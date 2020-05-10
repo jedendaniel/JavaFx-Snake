@@ -7,12 +7,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static dd.util.CollectionsUtil.mergeLists;
+
 public class CollisionHandler {
 
     private List<Collider> staticColliders = new ArrayList<>();
     private List<Collider> dynamicColliders = new ArrayList<>();
+    private List<Collider> allColliders = new ArrayList<>();
 
     public CollisionHandler() {
+    }
+
+    public CollisionHandler(List<Collider> staticColliders, List<Collider> dynamicColliders) {
+        this.staticColliders = staticColliders;
+        this.dynamicColliders = dynamicColliders;
+        this.allColliders.addAll(mergeLists(staticColliders, dynamicColliders));
     }
 
     public void handleCollisions() {
@@ -41,6 +50,10 @@ public class CollisionHandler {
         collider2.handleCollision(collider1);
     }
 
+    public List<Collider> getAllColliders() {
+        return allColliders;
+    }
+
     public List<Collider> getStaticColliders() {
         return staticColliders;
     }
@@ -59,9 +72,11 @@ public class CollisionHandler {
 
     public void addStaticCollider(Collider collider) {
         staticColliders.add(collider);
+        allColliders.add(collider);
     }
 
     public void addDynamicCollider(Collider collider) {
         dynamicColliders.add(collider);
+        allColliders.add(collider);
     }
 }

@@ -23,8 +23,10 @@ import static dd.collision.GameObjectType.SNAKE;
 import static dd.snake.SnakeState.*;
 
 public class Snake implements GameObject, GraphicObject, Collider {
-    private static final int DEFAULT_MAX_SIZE = 10;
-    private final Map<SnakeState, Procedure> snakeStateExpectedBehaviour = Map.of(
+
+    private static final int DEFAULT_MAX_SIZE = 12;
+
+    private final Map<SnakeState, Procedure> procedureForSnakeState = Map.of(
             MOVING, this::move,
             EATING, this::grow
     );
@@ -33,19 +35,19 @@ public class Snake implements GameObject, GraphicObject, Collider {
             SNAKE, LOST,
             FOOD, EATING
     );
-    private final GameObjectType gameObjectType = SNAKE;
 
     private Group group = new Group();
     private SnakePart head;
     private List<SnakePart> body = new LinkedList<>();
     private Direction direction = Direction.RIGHT;
     private List<TurnPoint> turnPointsQueue = new LinkedList<>();
-    private SnakeState state = MOVING;
+    private SnakeState snakeState = MOVING;
+    private int maxSize = DEFAULT_MAX_SIZE;
 
     public Snake(Point2D headPosition, int initialSize) {
         addHead(headPosition);
         IntStream.range(1, initialSize)
-                .forEach(i -> addBody(i, new SnakePart(headPosition.add(new Point2D(-i, 0)))));
+                .forEach(i -> addBody(new SnakePart(headPosition.add(new Point2D(-i, 0)))));
         collisionHandler.addDynamicCollider(this);
     }
 
@@ -56,34 +58,37 @@ public class Snake implements GameObject, GraphicObject, Collider {
         turnPointsQueue.add(0, new TurnPoint(direction, head.getPosition()));
     }
 
-    private void addBody(int index, SnakePart part) {
-        body.add(index - 1, part);
+    private void addBody(SnakePart part) {
+        body.add(part);
         group.getChildren().add(part.getNode());
-        turnPointsQueue.add(index, new TurnPoint(direction, part.getPosition()));
+        turnPointsQueue.add(new TurnPoint(direction, part.getPosition()));
         collisionHandler.addStaticCollider(part);
     }
 
     public void update() {
-        Optional.ofNullable(snakeStateExpectedBehaviour.get(state)).ifPresent(behaviour -> {
-            behaviour.execute();
-            state = MOVING;
-        });
+        Optional.ofNullable(procedureForSnakeState.get(snakeState)).ifPresent(Procedure::execute);
     }
 
     private void move() {
+        turnPointsQueue.add(0, new TurnPoint(direction, head.getPosition()));
+        turnPointsQueue.remove(turnPointsQueue.size() - 1);
         head.move(turnPointsQueue.get(0).getDirection());
         IntStream.range(0, body.size())
                 .forEach(i -> {
                     body.get(i).move(turnPointsQueue.get(i + 1).getDirection());
                     body.get(i).draw();
                 });
-        turnPointsQueue.remove(turnPointsQueue.size() - 1);
-        turnPointsQueue.add(0, new TurnPoint(direction, head.getPosition()));
     }
 
     private void grow() {
-        addBody(1, new SnakePart(head.getPosition()));
-        head.move(direction);
+        Point2D newPartPosition = body.get(body.size() - 1).getPosition();
+        move();
+        addBody(new SnakePart(newPartPosition));
+        if (body.size() == maxSize - 1) {
+            snakeState = WIN;
+        } else {
+            snakeState = MOVING;
+        }
     }
 
     @Override
@@ -111,15 +116,7 @@ public class Snake implements GameObject, GraphicObject, Collider {
 
     @Override
     public void handleCollision(Collider collider) {
-        state = snakeStateAfterCollision.get(collider.getGameObjectType());
-    }
-
-    public List<SnakePart> getBody() {
-        return body;
-    }
-
-    public SnakePart getHead() {
-        return head;
+        snakeState = snakeStateAfterCollision.get(collider.getGameObjectType());
     }
 
     @Override
@@ -127,7 +124,23 @@ public class Snake implements GameObject, GraphicObject, Collider {
         return SNAKE;
     }
 
-    public SnakeState getState() {
-        return state;
+    public SnakeState getSnakeState() {
+        return snakeState;
+    }
+
+    void setSnakeState(SnakeState snakeState) {
+        this.snakeState = snakeState;
+    }
+
+    int getSize() {
+        return body.size() + 1;
+    }
+
+    List<SnakePart> getBody() {
+        return body;
+    }
+
+    void setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
     }
 }

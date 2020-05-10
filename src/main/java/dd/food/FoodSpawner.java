@@ -2,20 +2,27 @@ package dd.food;
 
 import dd.GameObject;
 import dd.collision.Collider;
+import dd.common.RandomPoint2D;
 import javafx.geometry.Point2D;
 
 import java.util.List;
-import java.util.Random;
 
-import static dd.config.WindowProperties.*;
+import static dd.config.WindowProperties.UNIT;
+import static dd.config.WindowProperties.WIDTH;
 
 public class FoodSpawner implements GameObject {
 
-    private Random random = new Random();
+    private RandomPoint2D random = new RandomPoint2D();
     private final Food food;
     private List<Collider> colliders;
 
     public FoodSpawner(Food food, List<Collider> colliders) {
+        this.food = food;
+        this.colliders = colliders;
+    }
+
+    FoodSpawner(RandomPoint2D random, Food food, List<Collider> colliders) {
+        this.random = random;
         this.food = food;
         this.colliders = colliders;
     }
@@ -29,7 +36,7 @@ public class FoodSpawner implements GameObject {
     }
 
     private Point2D calculateRandomPosition() {
-        return new Point2D(random.nextInt(WIDTH / UNIT), (random.nextInt(HEIGHT / UNIT)));
+        return random.nextPoint2D(WIDTH / UNIT);
     }
 
     private boolean isPositionOccupied(Point2D position, List<Collider> colliders) {

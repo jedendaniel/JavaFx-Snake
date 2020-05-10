@@ -1,5 +1,7 @@
 package dd.common;
 
+import javafx.geometry.Point2D;
+
 public enum Direction {
     DOWN(0, 1),
     LEFT(-1, 0),
@@ -20,6 +22,10 @@ public enum Direction {
 
     public int getY() {
         return y;
+    }
+
+    public Point2D get2D() {
+        return new Point2D(x, y);
     }
 
     public Direction turnRight() {

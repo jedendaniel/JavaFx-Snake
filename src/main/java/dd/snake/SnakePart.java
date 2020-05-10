@@ -16,7 +16,6 @@ public class SnakePart implements GraphicObject, Collider {
     private static final Color COLOR = Color.GREEN;
     private final Rectangle graphic = new Rectangle();
     private Point2D position;
-    private final GameObjectType gameObjectType = SNAKE;
 
     SnakePart(Point2D position) {
         this.position = position;
