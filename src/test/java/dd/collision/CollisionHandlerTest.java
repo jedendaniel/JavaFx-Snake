@@ -7,7 +7,10 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class CollisionHandlerTest {
 
@@ -67,4 +70,10 @@ public class CollisionHandlerTest {
         verify(staticCollider1, times(0)).handleCollision(any());
     }
 
+    @Test
+    public void shouldNotDetectCollisionWhenItIsOnlyOneCollider() {
+        CollisionHandler handler = new CollisionHandler(List.of(dynamicCollider1), List.of());
+        handler.handleCollisions();
+        verify(dynamicCollider1, times(0)).handleCollision(any());
+    }
 }

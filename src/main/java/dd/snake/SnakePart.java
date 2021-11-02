@@ -9,13 +9,16 @@ import javafx.scene.Node;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import java.util.Optional;
+
 import static dd.collision.GameObjectType.SNAKE;
-import static dd.config.WindowProperties.UNIT;
+import static dd.config.Properties.UNIT;
 
 public class SnakePart implements GraphicObject, Collider {
     private static final Color COLOR = Color.GREEN;
     private final Rectangle graphic = new Rectangle();
     private Point2D position;
+    private Optional<GameObjectType> lastCollider = Optional.empty();
 
     SnakePart(Point2D position) {
         this.position = position;
@@ -46,8 +49,13 @@ public class SnakePart implements GraphicObject, Collider {
         return position;
     }
 
+    public void setPosition(Point2D position) {
+        this.position = position;
+    }
+
     @Override
     public void handleCollision(Collider collider) {
+        lastCollider = Optional.of(collider.getGameObjectType());
     }
 
     @Override
@@ -57,5 +65,13 @@ public class SnakePart implements GraphicObject, Collider {
 
     void setColor(Color color) {
         graphic.setFill(color);
+    }
+
+    public Optional<GameObjectType> getLastCollider() {
+        return lastCollider;
+    }
+
+    public void resetLastCollider() {
+        this.lastCollider = Optional.empty();
     }
 }

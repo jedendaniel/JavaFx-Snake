@@ -2,14 +2,12 @@ package dd.snake;
 
 import dd.GameObject;
 import dd.GraphicObject;
-import dd.collision.Collider;
 import dd.collision.GameObjectType;
 import dd.common.Direction;
 import dd.util.Procedure;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.paint.Color;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,71 +18,70 @@ import java.util.stream.IntStream;
 import static dd.Main.collisionHandler;
 import static dd.collision.GameObjectType.FOOD;
 import static dd.collision.GameObjectType.SNAKE;
-import static dd.snake.SnakeState.*;
+import static dd.snake.SnakeState.EATING;
+import static dd.snake.SnakeState.LOST;
+import static dd.snake.SnakeState.MOVING;
+import static dd.snake.SnakeState.WIN;
 
-public class Snake implements GameObject, GraphicObject, Collider {
+public class Snake implements GameObject, GraphicObject {
 
     private static final int DEFAULT_MAX_SIZE = 12;
 
-    private final Map<SnakeState, Procedure> procedureForSnakeState = Map.of(
+    private final Map<SnakeState, Procedure> stateProcedure = Map.of(
             MOVING, this::move,
             EATING, this::grow
     );
 
-    private final Map<GameObjectType, SnakeState> snakeStateAfterCollision = Map.of(
+    private static final Map<GameObjectType, SnakeState> COLLISION_STATE = Map.of(
             SNAKE, LOST,
             FOOD, EATING
     );
 
     private Group group = new Group();
-    private SnakePart head;
-    private List<SnakePart> body = new LinkedList<>();
+    private LinkedList<SnakePart> body = new LinkedList<>();
     private Direction direction = Direction.RIGHT;
-    private List<TurnPoint> turnPointsQueue = new LinkedList<>();
     private SnakeState snakeState = MOVING;
     private int maxSize = DEFAULT_MAX_SIZE;
 
     public Snake(Point2D headPosition, int initialSize) {
-        addHead(headPosition);
-        IntStream.range(1, initialSize)
+        IntStream.range(0, initialSize)
                 .forEach(i -> addBody(new SnakePart(headPosition.add(new Point2D(-i, 0)))));
-        collisionHandler.addDynamicCollider(this);
-    }
-
-    private void addHead(Point2D headPosition) {
-        head = new SnakePart(headPosition);
-        head.setColor(Color.CORAL);
-        group.getChildren().add(head.getNode());
-        turnPointsQueue.add(0, new TurnPoint(direction, head.getPosition()));
     }
 
     private void addBody(SnakePart part) {
-        body.add(part);
+        body.addLast(part);
         group.getChildren().add(part.getNode());
-        turnPointsQueue.add(new TurnPoint(direction, part.getPosition()));
-        collisionHandler.addStaticCollider(part);
+        collisionHandler.addDynamicCollider(part);
     }
 
     public void update() {
-        Optional.ofNullable(procedureForSnakeState.get(snakeState)).ifPresent(Procedure::execute);
+        Optional<SnakePart> lastCollider = body.stream()
+                .filter(snakePart -> snakePart.getLastCollider().isPresent())
+                .findAny();
+        if (lastCollider.isPresent() && lastCollider.get().getLastCollider().isPresent()) {
+            snakeState = COLLISION_STATE.get(lastCollider.get().getLastCollider().get());
+            lastCollider.get().resetLastCollider();
+        }
+        Optional.ofNullable(stateProcedure.get(snakeState)).ifPresent(Procedure::execute);
     }
 
     private void move() {
-        turnPointsQueue.add(0, new TurnPoint(direction, head.getPosition()));
-        turnPointsQueue.remove(turnPointsQueue.size() - 1);
-        head.move(turnPointsQueue.get(0).getDirection());
-        IntStream.range(0, body.size())
-                .forEach(i -> {
-                    body.get(i).move(turnPointsQueue.get(i + 1).getDirection());
-                    body.get(i).draw();
-                });
+        SnakePart newHead = body.pollLast();
+        SnakePart oldHead = body.getFirst();
+        assert newHead != null;
+        newHead.setPosition(oldHead.getPosition().add(direction.get2D()));
+        newHead.draw();
+        body.addFirst(newHead);
     }
 
     private void grow() {
-        Point2D newPartPosition = body.get(body.size() - 1).getPosition();
-        move();
-        addBody(new SnakePart(newPartPosition));
-        if (body.size() == maxSize - 1) {
+        SnakePart newHead = new SnakePart(body.getLast().getPosition());
+        SnakePart oldHead = body.getFirst();
+        newHead.setPosition(oldHead.getPosition().add(direction.get2D()));
+        group.getChildren().add(newHead.getNode());
+        collisionHandler.addDynamicCollider(newHead);
+        body.addFirst(newHead);
+        if (body.size() >= maxSize - 1) {
             snakeState = WIN;
         } else {
             snakeState = MOVING;
@@ -93,7 +90,6 @@ public class Snake implements GameObject, GraphicObject, Collider {
 
     @Override
     public void draw() {
-        head.draw();
         body.forEach(GraphicObject::draw);
     }
 
@@ -109,21 +105,6 @@ public class Snake implements GameObject, GraphicObject, Collider {
         this.direction = direction;
     }
 
-    @Override
-    public Point2D getPosition() {
-        return head.getPosition();
-    }
-
-    @Override
-    public void handleCollision(Collider collider) {
-        snakeState = snakeStateAfterCollision.get(collider.getGameObjectType());
-    }
-
-    @Override
-    public GameObjectType getGameObjectType() {
-        return SNAKE;
-    }
-
     public SnakeState getSnakeState() {
         return snakeState;
     }
@@ -133,7 +114,7 @@ public class Snake implements GameObject, GraphicObject, Collider {
     }
 
     int getSize() {
-        return body.size() + 1;
+        return body.size();
     }
 
     List<SnakePart> getBody() {
@@ -142,5 +123,9 @@ public class Snake implements GameObject, GraphicObject, Collider {
 
     void setMaxSize(int maxSize) {
         this.maxSize = maxSize;
+    }
+
+    public Point2D getPosition() {
+        return body.getFirst().getPosition();
     }
 }

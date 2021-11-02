@@ -1,7 +1,7 @@
 package dd;
 
 import dd.collision.CollisionHandler;
-import dd.config.WindowProperties;
+import dd.config.Properties;
 import dd.food.Food;
 import dd.food.FoodSpawner;
 import dd.snake.Snake;
@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 
 import java.util.List;
 
-import static dd.config.GameLoopProperties.FRAME_RATE;
+import static dd.config.Properties.FRAME_RATE;
 
 
 public class Main extends Application {
@@ -66,7 +66,7 @@ public class Main extends Application {
 
     private void initScene(Stage stage) {
         graphicObjects.forEach(graphicObject -> rootGroup.getChildren().add(graphicObject.getNode()));
-        scene = new Scene(rootGroup, WindowProperties.WIDTH, WindowProperties.HEIGHT);
+        scene = new Scene(rootGroup, Properties.WIDTH, Properties.HEIGHT);
         scene.setFill(Color.BLACK);
         stage.setTitle("Snake");
         stage.setScene(scene);

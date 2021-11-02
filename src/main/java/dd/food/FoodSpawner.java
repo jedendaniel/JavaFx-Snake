@@ -7,8 +7,8 @@ import javafx.geometry.Point2D;
 
 import java.util.List;
 
-import static dd.config.WindowProperties.UNIT;
-import static dd.config.WindowProperties.WIDTH;
+import static dd.config.Properties.UNIT;
+import static dd.config.Properties.WIDTH;
 
 public class FoodSpawner implements GameObject {
 

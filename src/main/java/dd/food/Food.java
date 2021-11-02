@@ -10,7 +10,7 @@ import javafx.scene.shape.Rectangle;
 
 import static dd.Main.collisionHandler;
 import static dd.collision.GameObjectType.FOOD;
-import static dd.config.WindowProperties.UNIT;
+import static dd.config.Properties.UNIT;
 import static dd.food.FoodState.SPAWNING;
 
 public class Food implements GraphicObject, Collider {

@@ -1,15 +1,13 @@
 package dd.snake;
 
-import dd.collision.Collider;
-import dd.collision.GameObjectType;
 import dd.common.Direction;
 import javafx.geometry.Point2D;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static dd.snake.SnakeState.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static dd.snake.SnakeState.EATING;
+import static dd.snake.SnakeState.MOVING;
+import static dd.snake.SnakeState.WIN;
 
 public class SnakeTest {
 
@@ -40,13 +38,13 @@ public class SnakeTest {
         snake.setDirection(Direction.UP);
         snake.update();
         Assert.assertEquals(secondCheckPoint, snake.getPosition());
-        Assert.assertEquals(firstCheckPoint, snake.getBody().get(0).getPosition());
+        Assert.assertEquals(firstCheckPoint, snake.getBody().get(1).getPosition());
         // third frame
         snake.setDirection(Direction.RIGHT);
         snake.update();
         Assert.assertEquals(thirdCheckPoint, snake.getPosition());
-        Assert.assertEquals(secondCheckPoint, snake.getBody().get(0).getPosition());
-        Assert.assertEquals(firstCheckPoint, snake.getBody().get(1).getPosition());
+        Assert.assertEquals(secondCheckPoint, snake.getBody().get(1).getPosition());
+        Assert.assertEquals(firstCheckPoint, snake.getBody().get(2).getPosition());
     }
 
     @Test
@@ -57,25 +55,25 @@ public class SnakeTest {
         Assert.assertEquals(HEAD_POSITION.add(snake.getDirection().get2D()), snake.getPosition());
     }
 
-    @Test
-    public void shouldBeEatingWhenCollidingWithFood() {
-        Collider foodCollider = mock(Collider.class);
-        when(foodCollider.getGameObjectType()).thenReturn(GameObjectType.FOOD);
-        snake.handleCollision(foodCollider);
-        Assert.assertEquals(EATING, snake.getSnakeState());
-    }
-
-    @Test
-    public void shouldLoseWhenCollidingWithItself() {
-        Collider snakeCollider = mock(Collider.class);
-        when(snakeCollider.getGameObjectType()).thenReturn(GameObjectType.SNAKE);
-        snake.handleCollision(snakeCollider);
-        Assert.assertEquals(LOST, snake.getSnakeState());
-    }
+//    @Test
+//    public void shouldBeEatingWhenCollidingWithFood() {
+//        Collider foodCollider = mock(Collider.class);
+//        when(foodCollider.getGameObjectType()).thenReturn(GameObjectType.FOOD);
+//        snake.handleCollision(foodCollider);
+//        Assert.assertEquals(EATING, snake.getSnakeState());
+//    }
+//
+//    @Test
+//    public void shouldLoseWhenCollidingWithItself() {
+//        Collider snakeCollider = mock(Collider.class);
+//        when(snakeCollider.getGameObjectType()).thenReturn(GameObjectType.SNAKE);
+//        snake.handleCollision(snakeCollider);
+//        Assert.assertEquals(LOST, snake.getSnakeState());
+//    }
 
     @Test
     public void shouldWinWhenReachedMaxSize() {
-        snake.setMaxSize(snake.getSize() + 1);
+        snake.setMaxSize(snake.getSize());
         snake.setSnakeState(EATING);
         snake.update();
         Assert.assertEquals(WIN, snake.getSnakeState());
